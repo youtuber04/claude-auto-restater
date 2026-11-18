@@ -389,14 +389,20 @@ PREFLIGHT_MESSAGES = {
         "No 5h/7d rate-limit windows are present in the statusline data — this looks "
         "like an API / usage-billed setup, which is metered per token rather than by "
         "rolling windows. otsukare only guards subscription rate limits, so there is "
-        "nothing for it to do here. Skipping."),
+        "nothing for it to do here. Skipping. "
+        "[한국어] 상태표시줄 데이터에 5시간·주간 한도 창이 없습니다. API 과금 환경이거나, "
+        "세션이 아직 첫 응답을 받기 전입니다. 구독 계정이면 메시지를 하나 보낸 뒤 다시 확인하세요."),
     "no_mirror": (
         "The usage mirror file is missing — your statusline isn't exposing usage data. "
-        "See the README 'expose your limits to your local agent' setup. otsukare can't "
-        "run without it."),
+        "Run scripts/setup.py once, then restart the terminal claude session. "
+        "[한국어] 사용량 미러 파일이 없습니다. 해결: scripts/setup.py 를 한 번 실행해 상태표시줄을 "
+        "등록한 뒤, 열려 있는 터미널 claude 를 /exit 로 끄고 다시 켜세요(설정은 시작할 때만 읽힘). "
+        "데스크톱 앱 Code 탭에서는 상태표시줄이 없어 동작하지 않습니다 — 터미널 claude 에서 쓰세요."),
     "stale": (
         "Couldn't get a fresh usage reading — the statusline mirror isn't updating. "
-        "Check the README setup; otsukare needs current usage data to run."),
+        "Check the README setup; otsukare needs current usage data to run. "
+        "[한국어] 사용량 미러가 갱신되지 않습니다. 지금 창이 터미널 claude 가 맞는지, 상태표시줄이 "
+        "맨 아래에 보이는지 확인하고, 안 보이면 /exit 후 다시 claude 를 켜세요."),
 }
 
 

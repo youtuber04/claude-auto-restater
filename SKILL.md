@@ -40,15 +40,26 @@ A wave already in flight cannot be checked, drained early, or stopped safely —
 
 - `<PY>` — your Python launcher. Try `py` (the Windows launcher), then `python3`, then `python`; keep the FIRST whose `--version` exits 0. Never run a bare interpreter with no script — it opens a REPL or, on Windows, hits the dead Microsoft Store stub.
   (This PC: Korean Windows console is cp949 — use `python -X utf8` as `<PY>`, otherwise output with "—" crashes with UnicodeEncodeError.)
-- `<HELPER>` — the absolute path to `otsukare_usage.py`, i.e. `<skills-dir>/claude auto restater/scripts/otsukare_usage.py` (폴더 이름에 띄어쓰기가 있으니 경로는 따옴표로 감싼다) with any `~` already expanded.
+- `<HELPER>` — the absolute path to `otsukare_usage.py`, i.e. `<skills-dir>/claude auto restater/scripts/otsukare_usage.py` (폴더 이름에 띄어쓰기가 있으니 경로는 따옴표로 감싼다)
+- `<SETUP>` — the absolute path to `setup.py` in the same `scripts` folder (installer / checker, idempotent) with any `~` already expanded.
 - `<state>` / `<heartbeat>` / `<checkpoint>` — once Step 0 confirms otsukare applies, run `<PY> <HELPER> --resolve-paths --session-id <session_id> --task-slug <task-slug>` **once** and keep the returned absolute paths (the call also emits `home`, `state_dir`, and `mirror`). Take `<session_id>` from the statusline mirror blob and `<task-slug>` from a short kebab of the task. Use these tokens everywhere below — never write a `~/...` path by hand.
 
-**Step 0 — confirm otsukare even applies here.** It only guards subscription 5h/7d limits:
+**Step 0-a — 자동 설치 점검 (묻지 말고 한다).** 먼저 설정 상태만 본다(아무것도 바꾸지 않음):
+```
+<PY> <SETUP> --check
+```
+JSON 의 `check.statusline_registered` 또는 `check.statusline_points_to_this_skill` 이 false 면 **바로 설치한다** — 사용자에게 허락을 묻지 않는다(settings.json 에 상태표시줄 미러와 SessionStart 훅만 넣고 백업을 남긴다):
+```
+<PY> <SETUP>
+```
+설치 결과의 `changed` 가 비어 있지 않으면 상태표시줄 설정은 **세션을 시작할 때만 읽히므로** 이 세션에서는 아직 사용량이 안 보인다. 사용자에게 한국어로 이렇게 알리고 **STOP** 한다: "설정을 넣었습니다. 이 터미널 claude 를 `/exit` 로 끄고 다시 `claude` 를 켠 뒤 같은 명령을 다시 입력해 주세요. 맨 아래에 '모델 · 5h N%' 줄이 보이면 준비된 것입니다. 데스크톱 앱 Code 탭에서는 상태표시줄이 없어 이 스킬이 동작하지 않습니다." (`check.mirror.exists` 가 true 이고 120초 안에 갱신됐다면 재시작 없이 바로 Step 0-b 로 간다.)
+
+**Step 0-b — confirm the guardrail even applies here.** It only guards subscription 5h/7d limits:
 ```
 <PY> <HELPER> --preflight
 ```
 - `applicable: true` → continue. (5h 창이 없고 주간 창만 보이는 요금제도 해당된다 — 그때는 안전망·신선도 판정이 주간 초기화 시각을 기준으로 한다.)
-- `applicable: false` → **show the user the `message` verbatim and STOP** — do not arm, checkpoint, or wrap anything. Reasons: `no_rate_limits` = an API / usage-billed plan (metered per token, no rolling windows) — otsukare has nothing to guard; `no_mirror` = the statusline mirror isn't wired (see README); `stale` = the mirror isn't updating.
+- `applicable: false` → **show the user the `message` verbatim and STOP** — do not arm, checkpoint, or wrap anything. `no_mirror` 인데 Step 0-a 에서 설정이 이미 돼 있었다면 원인은 둘 중 하나다: ① 지금 창이 데스크톱 앱(Code 탭)이라 상태표시줄이 없음 → 터미널 `claude` 에서 다시 하라고 안내, ② 설정을 넣은 뒤 터미널 claude 를 다시 켜지 않음 → `/exit` 후 다시 `claude`. `no_rate_limits` 가 세션 첫 응답 전에 나왔다면 메시지를 하나 보낸 뒤 한 번만 다시 확인한다. Reasons: `no_rate_limits` = an API / usage-billed plan (metered per token, no rolling windows) — otsukare has nothing to guard; `no_mirror` = the statusline mirror isn't wired (see README); `stale` = the mirror isn't updating.
 
 Once applicable, set up the dead-man's switch so a sudden usage spike that hard-cuts the session still auto-resumes:
 
